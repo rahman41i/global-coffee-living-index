@@ -1,115 +1,41 @@
-"""
-02_extract_faostat_coffee.py
-
-Pulls real, free, openly-licensed coffee production and export data from
-FAOSTAT (UN Food and Agriculture Organization).
-
-Features:
-  - Multi-year fallback loop (2022 -> 2021 -> 2020 -> 2019)
-  - Retry logic with exponential backoff for network resilience
-  - Loud failure policy (raises Exception if dataset remains 100% empty)
-"""
-
-import time
-import requests
+import os
 import pandas as pd
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
-BASE = "https://fenixservices.fao.org/faostat/api/v1/en"
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-
-
-def get_session():
-    session = requests.Session()
-    retries = Retry(
-        total=4,
-        backoff_factor=1.5,
-        status_forcelist=[500, 502, 503, 504, 521],
-        raise_on_status=False,
-    )
-    session.mount("https://", HTTPAdapter(max_retries=retries))
-    return session
-
-
-def fetch_domain_year_fallback(session, domain_code, item_code, element_code, years=[2022, 2021, 2020, 2019]):
-    url = f"{BASE}/data/{domain_code}"
+def load_faostat_data():
+    raw_file = "faostat_coffee_raw.csv"
+    manual_export = "FAOSTAT_data_en_8-15-2026.csv"
     
-    for yr in years:
-        params = {
-            "item": item_code,
-            "element": element_code,
-            "year": yr,
-            "area_cs": "ISO3",
-            "show_code": 1,
-            "show_unit": 1,
-            "show_flags": 0,
-            "null_values": 0,
-            "limit": -1,
-            "output_type": "objects",
+    if os.path.exists(raw_file):
+        print(f"Loading cached FAOSTAT data from {raw_file}...")
+        return pd.read_csv(raw_file)
+    elif os.path.exists(manual_export):
+        print(f"Parsing manual FAOSTAT export file {manual_export}...")
+        df = pd.read_csv(manual_export)
+        m49_to_iso3 = {
+            24: 'AGO', 84: 'BLZ', 204: 'BEN', 68: 'BOL', 76: 'BRA', 108: 'BDI', 132: 'CPV',
+            116: 'KHM', 120: 'CMR', 140: 'CAF', 159: 'CHN', 158: 'TWN', 156: 'CHN', 170: 'COL',
+            174: 'COM', 178: 'COG', 184: 'COK', 188: 'CRI', 192: 'CUB', 384: 'CIV', 180: 'COD',
+            212: 'DMA', 214: 'DOM', 218: 'ECU', 222: 'SLV', 226: 'GNQ', 231: 'ETH', 242: 'FJI',
+            258: 'PYF', 266: 'GAB', 288: 'GHA', 320: 'GTM', 324: 'GIN', 328: 'GUY', 332: 'HTI',
+            340: 'HND', 356: 'IND', 360: 'IDN', 388: 'JAM', 404: 'KEN', 418: 'LAO', 430: 'LBR',
+            450: 'MDG', 454: 'MWI', 458: 'MYS', 480: 'MUS', 484: 'MEX', 508: 'MOZ', 104: 'MMR',
+            524: 'NPL', 540: 'NCL', 558: 'NIC', 566: 'NGA', 591: 'PAN', 598: 'PNG', 600: 'PRY',
+            604: 'PER', 608: 'PHL', 630: 'PRI', 646: 'RWA', 662: 'LCA', 670: 'VCT', 882: 'WSM',
+            678: 'STP', 682: 'SAU', 694: 'SLE', 144: 'LKA', 740: 'SUR', 764: 'THA', 626: 'TLS',
+            768: 'TGO', 776: 'TON', 780: 'TTO', 800: 'UGA', 834: 'TZA', 840: 'USA', 548: 'VUT',
+            862: 'VEN', 704: 'VNM', 887: 'YEM', 894: 'ZMB', 716: 'ZWE'
         }
-        try:
-            print(f"  Attempting domain {domain_code} for year {yr}...")
-            resp = session.get(url, params=params, headers=HEADERS, timeout=20)
-            if resp.status_code == 200:
-                data = resp.json().get("data", [])
-                if data:
-                    print(f"  Success! Year {yr} -> {len(data)} records found.")
-                    return data
-            else:
-                print(f"  Year {yr} returned status code {resp.status_code}")
-        except Exception as e:
-            print(f"  Request failed for year {yr}: {e}")
-        time.sleep(1)
-        
-    return []
-
-
-def main():
-    session = get_session()
-    coffee_item_code = 656
-    production_element_code = 5510
-    export_value_element_code = 5922
-
-    print("Fetching coffee production (domain QCL)...")
-    production = fetch_domain_year_fallback(session, "QCL", coffee_item_code, production_element_code)
-
-    print("Fetching coffee export value (domain TCL)...")
-    exports = fetch_domain_year_fallback(session, "TCL", coffee_item_code, export_value_element_code)
-
-    if not production and not exports:
-        raise RuntimeError(
-            "CRITICAL: FAOSTAT API call failed for all fallback years and retries! "
-            "No coffee data retrieved. Check network connectivity or FAOSTAT service status."
-        )
-
-    if production:
-        prod_df = pd.DataFrame(production)[["Area Code (ISO3)", "Area", "Value", "Unit"]].rename(
-            columns={
-                "Area Code (ISO3)": "iso3_code",
-                "Area": "country_name",
-                "Value": "coffee_production_qty",
-                "Unit": "production_unit",
-            }
-        )
+        df['iso3_code'] = df['Area Code (M49)'].map(m49_to_iso3)
+        df_out = pd.DataFrame({
+            'iso3_code': df['iso3_code'],
+            'country_name': df['Area'],
+            'coffee_production_qty': df['Value'],
+            'production_unit': df['Unit'],
+            'coffee_export_value_usd1000': None,
+            'export_unit': None
+        })
+        df_out.to_csv(raw_file, index=False)
+        print(f"Successfully processed and saved {raw_file}")
+        return df_out
     else:
-        prod_df = pd.DataFrame(columns=["iso3_code", "country_name", "coffee_production_qty", "production_unit"])
-
-    if exports:
-        exp_df = pd.DataFrame(exports)[["Area Code (ISO3)", "Value", "Unit"]].rename(
-            columns={
-                "Area Code (ISO3)": "iso3_code",
-                "Value": "coffee_export_value_usd1000",
-                "Unit": "export_unit",
-            }
-        )
-    else:
-        exp_df = pd.DataFrame(columns=["iso3_code", "coffee_export_value_usd1000", "export_unit"])
-
-    merged = prod_df.merge(exp_df, on="iso3_code", how="outer")
-    merged.to_csv("faostat_coffee_raw.csv", index=False)
-    print(f"\nSaved -> faostat_coffee_raw.csv ({len(merged)} countries with coffee data)")
-
-
-if __name__ == "__main__":
-    main()
+        raise FileNotFoundError("Neither API response nor local FAOSTAT export CSV found.")
