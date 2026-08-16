@@ -1,13 +1,3 @@
-"""
-03_get_country_capitals.py
-
-Pulls real capital-city names per country from restcountries.com (free,
-no API key). Used ONLY as a readability label ("representative city") on
-top of country-level data - not a claim that price/coffee data is specific
-to that city. This should be documented clearly in the final dataset's
-README/data dictionary.
-"""
-
 import requests
 import pandas as pd
 
