@@ -1,23 +1,3 @@
-"""
-01_extract_worldbank_indicators.py
-
-Pulls real, free, CC BY-4.0 licensed country-level economic indicators from
-the World Bank Indicators API. No API key required.
-
-Indicators pulled:
-  - NY.GNP.PCAP.CD : GNI per capita, Atlas method (current US$)
-  - PA.NUS.GDP.PLI : Price level index (GDP) - price levels relative to a
-                      world-average benchmark; this is the real "cost of
-                      living" proxy for this project
-  - PA.NUS.PPP     : PPP conversion factor, GDP (LCU per international $)
-
-API docs: https://datahelpdesk.worldbank.org/knowledgebase/articles/898599
-Response shape (confirmed from official docs):
-  [ {"page": 1, "pages": N, "per_page": "...", "total": N},
-    [ {"indicator": {"id":...}, "country": {"id":..., "value":...},
-       "countryiso3code": "...", "date": "2023", "value": 1234.5, ...}, ... ] ]
-"""
-
 import requests
 import pandas as pd
 import time
@@ -32,12 +12,6 @@ BASE_URL = "https://api.worldbank.org/v2/country/all/indicator/{indicator}"
 
 
 def fetch_indicator(indicator_code, column_name, year_range="2018:2023"):
-    """
-    Pull one indicator for all countries. World Bank data has gaps by year,
-    so we pull a range and keep, per country, the most recent non-null value
-    rather than a single fixed year (avoids losing countries that just
-    happen to be missing the latest year).
-    """
     rows = []
     page = 1
     while True:
@@ -90,7 +64,7 @@ def main():
         else:
             merged = merged.merge(df.drop(columns=["country_name"]), on="iso3_code", how="outer")
 
-    merged = merged[merged["iso3_code"].str.len() == 3]  # drop aggregate regions (e.g. "WLD", "EUU")
+    merged = merged[merged["iso3_code"].str.len() == 3]
     merged.to_csv("worldbank_indicators_raw.csv", index=False)
     print(f"\nSaved -> worldbank_indicators_raw.csv ({len(merged)} countries)")
 
