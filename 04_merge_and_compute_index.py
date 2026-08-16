@@ -1,12 +1,3 @@
-"""
-04_merge_and_compute_index.py
-
-Merges World Bank indicators, FAOSTAT coffee data, and capital-city labels
-into the final Global Coffee & Living Index dataset. Computes one derived
-metric: a coffee export value relative to income, as a real (not fabricated)
-"affordability"-style signal.
-"""
-
 import pandas as pd
 
 
