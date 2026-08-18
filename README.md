@@ -57,7 +57,7 @@ Projects $PPR$ onto a normalized $[0, 100]$ scale for global cross-country bench
 
 ---
 
-> 🚀 **Kaggle Release:** The complete dataset, processed metrics, and analytical notebooks are published on Kaggle for interactive exploration, visualization, and reproducible research.
+>  **Kaggle Release:** The complete dataset, processed metrics, and analytical notebooks are published on Kaggle for interactive exploration, visualization, and reproducible research.
 
 ---
 
