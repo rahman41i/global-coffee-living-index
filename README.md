@@ -57,11 +57,11 @@ Projects $PPR$ onto a normalized $[0, 100]$ scale for global cross-country bench
 
 ---
 
->  **Kaggle Release:** The complete dataset, processed metrics, and analytical notebooks are published on Kaggle for interactive exploration, visualization, and reproducible research.
+>  **Kaggle Release:** The complete dataset, processed metrics, and analytical notebooks are published on [Kaggle](https://www.kaggle.com/datasets/rahman4li/global-coffee-and-living-index-2026) for interactive exploration, visualization, and reproducible research.
 
 ---
 
 ##  Kaggle Resources
 
-*  **Kaggle Dataset:** [Global Coffee & Living Index Dataset]([https://www.kaggle.com/datasets](https://www.kaggle.com/datasets/rahman4li/global-coffee-and-living-index-2026))
-*  **Kaggle Notebook / EDA:** [View Interactive Analysis]([https://www.kaggle.com/code](https://www.kaggle.com/code/rahman4li/global-coffee-and-living-index))
+* **Kaggle Dataset:** [Global Coffee & Living Index Dataset](https://www.kaggle.com/datasets/rahman4li/global-coffee-and-living-index-2026)
+* **Kaggle Notebook / EDA:** [View Interactive Analysis](https://www.kaggle.com/code/rahman4li/global-coffee-and-living-index)
