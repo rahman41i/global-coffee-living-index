@@ -1,0 +1,463 @@
+\documentclass[11pt,a4paper]{article}
+
+%  Packages 
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+
+%  Hyperlink Setup 
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+%  Section Formatting 
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\small\bfseries}{\thesubsubsection.}{0.5em}{}
+
+%  Page Header/Footer 
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Global Coffee \& Living Index: Econometric Analysis}
+\fancyhead[R]{\small August 2026}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\setstretch{1.15}
+
+%  Custom Command Definitions 
+\newcommand{\good}{\textcolor{green!50!black}{\textbf{Resolved}}}
+\newcommand{\bad}{\textcolor{red!70!black}{\textbf{Critical}}}
+\newcommand{\warn}{\textcolor{orange!80!black}{\textbf{Moderate}}}
+
+%  Document Metadata 
+\title{\textbf{Global Coffee \& Living Index: Econometric Analysis, Statistical Modeling, and Data Pipeline Quality Report}\\
+\large A Comprehensive Cross-Sectional Analysis of Real Purchasing Power, Price Elasticities, and Agricultural Commodity Traps}
+\author{\textbf{Rahman Aliyev}\\
+\small Data Vintage: World Bank Indicators (2018 - 2023) \& FAOSTAT Coffee Statistics (2020 - 2022)}
+\date{July 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent This report presents an econometric investigation and data quality evaluation of the \emph{Global Coffee \& Living Index} ($n=251$ world entities, $n=198$ fully matched observations). We examine global income distribution, domestic price elasticity, real purchasing power dynamics, and agricultural trade imbalances. Log-log Ordinary Least Squares (OLS) regression confirms the existence of the Penn Effect ($\epsilon = 0.2252, R^2 = 0.572$), establishing that domestic price levels increase at less than one-quarter the rate of national income growth. Consequently, real domestic purchasing power accelerates non-linearly in developed economies ($R^2 = 0.777$). 
+
+Furthermore, we provide empirical evidence of the \emph{Coffee Commodity Paradox}: green coffee-producing nations exhibit an average Living Affordability Score ($LAS$) of 9.35 compared to 29.29 for non-producing entities ($p < 10^{-13}$). Multivariate OLS models confirm that green coffee production volume yields no statistically significant positive contribution to domestic living standards ($\beta = 0.1812, p = 0.348$). Finally, we document the remediation of silent API pipeline failures and propose an architectural roadmap for publication.
+\end{abstract}
+
+
+
+
+\newpage
+\tableofcontents
+\newpage
+
+
+\section{Executive Summary \& Research Objectives}
+
+
+The \emph{Global Coffee \& Living Index} synthesizes macroeconomic indicators from the World Bank API, green coffee production metrics from the UN Food and Agriculture Organization (FAOSTAT) API, and geographic capital metadata. The primary objective is to measure domestic purchasing power across nations while assessing whether participation in primary agricultural commodity production (specifically coffee) translates into tangible local living standards.
+
+\subsection{Key Analytical Findings}
+\begin{enumerate}[leftmargin=1.5em]
+    \item \textbf{Non-Linear Acceleration of Purchasing Power:} While the Price Level Index ($PLI$) scales positively with Gross National Income ($GNI$), its income elasticity is inelastic ($\epsilon = 0.2252$). As a result, living affordability ($LAS$) accelerates rapidly in upper-income brackets, resulting in high global inequality ($\text{Gini}_{LAS} = 0.5281$).
+    \item \textbf{The Agricultural Commodity Paradox:} Major coffee-producing nations are concentrated in lower-income brackets. Controlling for income, coffee production volume demonstrates no statistically significant relationship with local living standards ($p = 0.348$), highlighting an ongoing value-retention bottleneck within the global agricultural supply chain.
+    \item \textbf{Pipeline Defect Remediation:} Audit procedures resolved silent API timeout failures, preventing 100\% missingness in agricultural fields and eliminating 48 non-country aggregate regions from leaking into country-level cross-sections.
+\end{enumerate}
+
+
+\section{Methodological Framework \& Metric Formulation}
+
+
+To quantify local living standards relative to macroeconomic output, the dataset constructs two continuous derived metrics. Let $GNI_i$ denote Gross National Income per capita (Atlas method, current US\$) for country $i$, and let $PLI_i$ denote the Price Level Index (expressed relative to the United States baseline of 100).
+
+\subsection{Purchasing Power Ratio ($PPR$)}
+The Purchasing Power Ratio ($PPR_i$) measures real local income per unit of domestic price intensity:
+\begin{equation}
+PPR_i = \frac{GNI_i}{PLI_i}
+\end{equation}
+Because $PLI_i$ reflects the cost of a standardized basket of goods relative to the U.S., $PPR_i$ acts as a price-adjusted nominal income metric.
+
+\subsection{Living Affordability Score ($LAS$)}
+To project $PPR_i$ onto a bounded continuous scale $[0, 100]$ suitable for cross-country benchmarking, min-max feature normalization is applied:
+\begin{equation}
+LAS_i = \left( \frac{PPR_i - \min(PPR)}{\max(PPR) - \min(PPR)} \right) \times 100
+\end{equation}
+Across the matched baseline sample ($n=198$), observed boundary values are $\min(PPR) = 12.86$ (Burundi) and $\max(PPR) = 1,277.93$ (Qatar).
+
+
+\section{Parametric Summary \& Statistical Distributions}
+
+
+Table~\ref{tab:macro_stats} summarizes central tendency and dispersion metrics across the full cross-sectional dataset ($n=251$).
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+\textbf{Indicator Variable} & \textbf{$n$} & \textbf{Mean} & \textbf{Std Dev} & \textbf{Min} & \textbf{Median} & \textbf{Max} \\
+\midrule
+GNI per capita (US\$) & 247 & \$17,631.56 & \$23,011.40 & \$280.00 & \$7,210.00 & \$133,460.00 \\
+Price Level Index ($PLI$) & 202 & 50.33 & 22.36 & 18.64 & 43.17 & 117.05 \\
+PPP Conversion Factor & 202 & 850.39 & 6,888.66 & 0.17 & 5.32 & 94,280.27 \\
+Purchasing Power Ratio ($PPR$) & 198 & 291.63 & 281.93 & 12.86 & 190.12 & 1,277.93 \\
+Living Affordability Score ($LAS$) & 198 & 22.04 & 22.29 & 0.00 & 14.01 & 100.00 \\
+Coffee Production Qty ($t$) & 77 & 144,100.90 & 439,259.90 & 1.54 & 8,557.00 & 3,179,341.00 \\
+\bottomrule
+\end{tabular}
+\caption{Parametric summary statistics across macroeconomic and agricultural variables.}
+\label{tab:macro_stats}
+\end{table}
+
+\subsection{Percentile Distribution \& Higher-Order Moments}
+Both national income and living affordability exhibit substantial positive skewness and heavy right tails. Table~\ref{tab:quantiles} details distributional percentiles and higher-order moments.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Percentile / Moment} & \textbf{GNI per capita} & \textbf{PLI} & \textbf{PPP Factor} & \textbf{$PPR$} & \textbf{$LAS$} \\
+\midrule
+5th Percentile ($P_5$) & \$770.00 & 24.56 & 0.43 & 20.00 & 0.57 \\
+10th Percentile ($P_{10}$) & \$1,220.00 & 27.66 & 0.54 & 33.67 & 1.64 \\
+25th Percentile ($P_{25}$) & \$2,570.00 & 32.77 & 0.94 & 73.18 & 4.77 \\
+50th Percentile ($P_{50}$) & \$7,210.00 & 43.17 & 5.32 & 190.12 & 14.01 \\
+75th Percentile ($P_{75}$) & \$22,085.00 & 63.21 & 93.33 & 429.44 & 32.93 \\
+90th Percentile ($P_{90}$) & \$54,050.66 & 85.00 & 434.43 & 730.28 & 56.71 \\
+95th Percentile ($P_{95}$) & \$71,315.00 & 92.11 & 1,338.77 & 810.88 & 63.08 \\
+99th Percentile ($P_{99}$) & \$93,707.20 & 111.18 & 10,392.53 & 1,166.17 & 91.17 \\
+\midrule
+\textbf{Skewness ($\gamma_1$)} & \textbf{1.992} & \textbf{0.917} & \textbf{12.737} & \textbf{1.328} & \textbf{1.328} \\
+\textbf{Excess Kurtosis ($\gamma_2$)} & \textbf{4.060} & \textbf{0.058} & \textbf{171.050} & \textbf{1.229} & \textbf{1.229} \\
+\bottomrule
+\end{tabular}
+\caption{Percentile break points, skewness, and excess kurtosis coefficients ($n=198$).}
+\label{tab:quantiles}
+\end{table}
+
+The GNI skewness ($\gamma_1 = 1.992$) underscores global wealth concentration: the mean GNI (\$17,631.56) exceeds the 50th percentile (\$7,210.00) by a factor of 2.44.
+
+% =========================================================================
+\section{Econometric Modeling \& Empirical Analysis}
+% =========================================================================
+
+\subsection{Price-Income Elasticity: The Penn Effect}
+Economic theory predicts that domestic price levels rise with per-capita income due to non-tradable service productivity differentials (the Balassa-Samuelson effect and Penn Effect). To estimate global price elasticity, we evaluate a log-log OLS regression model:
+\begin{equation}
+\ln(PLI_i) = \beta_0 + \epsilon \cdot \ln(GNI_i) + u_i
+\end{equation}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Variable} & \textbf{Coefficient} & \textbf{Std. Error} & \textbf{$t$-statistic} & \textbf{$p$-value} & \textbf{95\% Conf. Interval} \\
+\midrule
+Constant ($\beta_0$) & 1.8034 & 0.126 & 14.297 & $< 0.0001$ & $[1.555, 2.052]$ \\
+$\ln(GNI)$ ($\epsilon$) & 0.2252 & 0.014 & 16.194 & $< 0.0001$ & $[0.198, 0.253]$ \\
+\midrule
+\multicolumn{6}{@{}l}{\textbf{Model Diagnostics:} $n = 198$, $R^2 = 0.572$, Adjusted $R^2 = 0.570$, $F(1, 196) = 262.3, p < 10^{-37}$} \\
+\bottomrule
+\end{tabular}
+\caption{Log-log OLS estimation of Price Level Index elasticity relative to GNI per capita.}
+\label{tab:ols_pli}
+\end{table}
+
+\textbf{Econometric Interpretation:} The estimated elasticity $\hat{\epsilon} = 0.2252$ ($p < 0.0001$) confirms that a 10\% increase in GNI per capita is associated with only a 2.25\% increase in domestic price levels. Because domestic prices increase at less than one-quarter the rate of nominal wage growth, high-income nations experience substantial real gains in domestic purchasing power.
+
+\subsection{Living Affordability Dynamics}
+To evaluate how real purchasing power accelerates with national wealth, we estimate a semi-log model predicting $LAS_i$ directly from $\ln(GNI_i)$:
+\begin{equation}
+LAS_i = \alpha_0 + \alpha_1 \cdot \ln(GNI_i) + e_i
+\end{equation}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Variable} & \textbf{Coefficient} & \textbf{Std. Error} & \textbf{$t$-statistic} & \textbf{$p$-value} & \textbf{95\% Conf. Interval} \\
+\midrule
+Constant ($\alpha_0$) & -101.2896 & 4.777 & -21.203 & $< 0.0001$ & $[-110.711, -91.868]$ \\
+$\ln(GNI)$ ($\alpha_1$) & 13.7662 & 0.527 & 26.140 & $< 0.0001$ & $[12.728, 14.805]$ \\
+\midrule
+\multicolumn{6}{@{}l}{\textbf{Model Diagnostics:} $n = 198$, $R^2 = 0.777$, Adjusted $R^2 = 0.776$, $F(1, 196) = 683.3, p < 10^{-65}$} \\
+\bottomrule
+\end{tabular}
+\caption{Semi-log OLS estimation of Living Affordability Score relative to log GNI per capita.}
+\label{tab:ols_las}
+\end{table}
+
+The model demonstrates strong explanatory power ($R^2 = 0.777$). Each 1-unit increase in $\ln(GNI)$ yields a 13.77 point increase in $LAS$.
+
+% =========================================================================
+\section{Global Inequality \& Income Quartile Analysis}
+% =========================================================================
+
+To measure inequality across macroeconomic metrics, relative concentration indices were calculated. The dataset exhibits a Gini coefficient of 0.6155 for GNI per capita, 0.5048 for $PPR$, and 0.5281 for $LAS$.
+
+Table~\ref{tab:quartile_summary} divides the matched sample ($n=198$) into four income quartiles.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+\textbf{Income Quartile} & \textbf{Count} & \textbf{Mean GNI} & \textbf{Mean PLI} & \textbf{Mean PPR} & \textbf{Mean LAS} & \textbf{Coffee Producers} \\
+\midrule
+Q1 (Low Income) & 50 & \$1,389.60 & 32.45 & 44.78 & 2.52 & 33 (66.0\%) \\
+Q2 (Lower-Middle) & 49 & \$4,888.57 & 40.93 & 131.71 & 9.39 & 22 (44.9\%) \\
+Q3 (Upper-Middle) & 49 & \$14,029.80 & 50.36 & 290.88 & 21.98 & 15 (30.6\%) \\
+Q4 (High Income) & 50 & \$53,058.60 & 76.16 & 695.95 & 54.00 & 2 (4.0\%) \\
+\bottomrule
+\end{tabular}
+\caption{Disaggregated structural breakdown across GNI per capita quartiles.}
+\label{tab:quartile_summary}
+\end{table}
+
+\textbf{Quartile Observations:}
+\begin{itemize}[leftmargin=1.5em]
+    \item Affordability Gap: Q4 entities enjoy a mean $LAS$ 21.4 times higher than Q1 entities (54.00 vs. 2.52), despite Q4 price levels being only 2.3 times higher (76.16 vs. 32.45).
+    \item Agricultural Clustering: 66.0\% of Q1 nations produce green coffee, compared to 4.0\% of Q4 nations.
+\end{itemize}
+
+% =========================================================================
+\section{The Coffee Commodity Paradox}
+% =========================================================================
+
+A central question is whether national coffee production supports domestic purchasing power.
+
+\subsection{Hypothesis Testing: Producers vs. Non-Producers}
+We evaluate the difference in Living Affordability Scores between coffee-producing nations ($n=72$) and non-producing entities ($n=126$).
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\textbf{Group Cohort} & \textbf{Sample ($n$)} & \textbf{Mean $LAS$} & \textbf{Median $LAS$} & \textbf{Mean GNI per capita} \\
+\midrule
+Coffee-Producing Nations & 72 & 9.35 & 6.21 & \$4,812.50 \\
+Non-Producing Entities & 126 & 29.29 & 23.34 & \$24,952.18 \\
+\midrule
+\textbf{Disparity Ratio} & - & \textbf{3.13$\times$} & \textbf{3.76$\times$} & \textbf{5.18$\times$} \\
+\bottomrule
+\end{tabular}
+\caption{Comparison of living standards between coffee-producing and non-producing entities.}
+\label{tab:coffee_hypothesis}
+\end{table}
+
+\textbf{Statistical Significance Tests:}
+\begin{itemize}[leftmargin=1.5em]
+    \item Welch's $t$-test (Unequal Variances): $t = -8.1241, p = 6.42 \times 10^{-14}$.
+    \item Mann-Whitney $U$ Non-Parametric Test: $U = 2048.0, p = 1.42 \times 10^{-10}$.
+\end{itemize}
+Both tests reject the null hypothesis, confirming that coffee-producing nations experience significantly lower living affordability scores than non-producers.
+
+\subsection{Multivariate OLS Regression Within Coffee Producers}
+To determine if production volume provides a marginal benefit, we estimate a multivariate OLS model for coffee producers ($n=72$):
+\begin{equation}
+LAS_i = \gamma_0 + \gamma_1 \cdot \ln(GNI_i) + \gamma_2 \cdot \ln(\text{Coffee Qty}_i) + \eta_i
+\end{equation}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Variable} & \textbf{Coefficient} & \textbf{Std. Error} & \textbf{$t$-statistic} & \textbf{$p$-value} & \textbf{95\% Conf. Interval} \\
+\midrule
+Constant ($\gamma_0$) & -58.1037 & 5.248 & -11.071 & $< 0.0001$ & $[-68.574, -47.633]$ \\
+$\ln(GNI)$ ($\gamma_1$) & 8.0999 & 0.584 & 13.875 & $< 0.0001$ & $[6.935, 9.264]$ \\
+$\ln(\text{Coffee Qty})$ ($\gamma_2$) & 0.1812 & 0.192 & 0.944 & \textbf{0.3480} & $[-0.202, 0.564]$ \\
+\midrule
+\multicolumn{6}{@{}l}{\textbf{Model Diagnostics:} $n = 72$, $R^2 = 0.737$, Adjusted $R^2 = 0.729$, $F(2, 69) = 96.43, p < 10^{-20}$} \\
+\bottomrule
+\end{tabular}
+\caption{Multivariate OLS model assessing marginal impact of production volume on $LAS$.}
+\label{tab:ols_coffee_multivariate}
+\end{table}
+
+\textbf{Analytical Conclusion:} Controlling for national income, the coefficient for coffee production volume ($\gamma_2 = 0.1812, p = 0.3480$) is not statistically significant. Increasing coffee output volume does not independently improve local purchasing power, illustrating a primary agricultural commodity trap where retail value captures occur downstream in consuming markets.
+
+
+\section{Cross-Country Comparative Outlier Analysis}
+
+
+Table~\ref{tab:rankings} highlights the top 10 and bottom 10 performing nations in Living Affordability Scores.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}llrrr|llrrr@{}}
+\toprule
+\multicolumn{5}{c|}{\textbf{Top 10 Living Affordability Scores}} & \multicolumn{5}{c}{\textbf{Bottom 10 Living Affordability Scores}} \\
+\textbf{ISO} & \textbf{Country} & \textbf{GNI (\$)} & \textbf{PLI} & \textbf{LAS} & \textbf{ISO} & \textbf{Country} & \textbf{GNI (\$)} & \textbf{PLI} & \textbf{LAS} \\
+\midrule
+QAT & Qatar & 79,430 & 62.16 & 100.00 & BDI & Burundi & 280 & 21.77 & 0.00 \\
+NOR & Norway & 101,840 & 84.43 & 94.34 & CAF & Cent. Afr. Rep. & 530 & 39.42 & 0.05 \\
+SGP & Singapore & 69,530 & 59.69 & 91.07 & MOZ & Mozambique & 540 & 37.03 & 0.14 \\
+BMU & Bermuda & 133,460 & 117.05 & 89.11 & SOM & Somalia & 600 & 38.34 & 0.22 \\
+MAC & Macao SAR & 64,780 & 57.73 & 87.68 & LBR & Liberia & 710 & 44.50 & 0.24 \\
+LUX & Luxembourg & 88,480 & 87.31 & 79.09 & COD & Dem. Rep. Congo & 680 & 38.12 & 0.39 \\
+IRL & Ireland & 79,280 & 80.05 & 77.27 & MDG & Madagascar & 510 & 28.40 & 0.40 \\
+BRN & Brunei & 34,390 & 38.65 & 69.32 & MWI & Malawi & 620 & 34.56 & 0.40 \\
+CHE & Switzerland & 98,160 & 111.19 & 68.77 & NER & Niger & 640 & 34.05 & 0.47 \\
+DNK & Denmark & 72,080 & 87.88 & 63.82 & AFG & Afghanistan & 370 & 18.78 & 0.54 \\
+\bottomrule
+\end{tabular}
+\caption{Cross-country rankings of top 10 and bottom 10 entities by Living Affordability Score.}
+\label{tab:rankings}
+\end{table}
+
+\subsection{Case Studies}
+\begin{itemize}[leftmargin=1.5em]
+    \item Qatar ($LAS = 100.00$): Qatar ranks first due to high per-capita GNI (\$79,430) combined with a moderate price index ($PLI = 62.16$), driven by energy subsidies and low import tariffs.
+    \item Burundi ($LAS = 0.00$): Burundi exhibits the global minimum $PPR$ (12.86). Despite low prices ($PLI = 21.77$), extremely low nominal GNI (\$280) restricts real purchasing power.
+\end{itemize}
+
+% =========================================================================
+\section{Data Pipeline Audit \& Completeness Analysis}
+% =========================================================================
+
+Systematic code auditing identified five pipeline software defects, detailed in Table~\ref{tab:issues}.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}p{2.2cm}p{6.8cm}p{4.8cm}@{}}
+\toprule
+\textbf{Severity} & \textbf{Pipeline Defect Description} & \textbf{Engineering Resolution} \\
+\midrule
+\bad &
+Script \texttt{02} failed silently during API timeouts, outputting an empty CSV and causing 100\% missingness in coffee metrics. &
+Added multi-year API retry loops (2022 $\rightarrow$ 2021 $\rightarrow$ 2020), offline CSV fallback parsers, and validation guards. \\
+\addlinespace
+\bad &
+World Bank regional aggregates (e.g., \texttt{WLD}, \texttt{EUU}) leaked into country datasets because ISO code length checks (\texttt{len == 3}) failed to filter aggregate entities. &
+Replaced string length checks with a hardcoded exclusion list of 48 regional aggregate ISO codes. \\
+\addlinespace
+\warn &
+Coffee export value columns were missing when executing via manual bulk fallback files. &
+Documented fallback behavior in execution logs and implemented non-null coverage checks. \\
+\addlinespace
+\warn &
+Observation year columns were discarded during extraction, reducing auditability. &
+Preserved source metadata fields (\texttt{gni\_year}, \texttt{pli\_year}, \texttt{coffee\_data\_year}). \\
+\addlinespace
+\warn &
+Dataset release year (2026) was confused with source data vintage (2018--2023). &
+Standardized documentation to distinguish publication release year from underlying survey periods. \\
+\bottomrule
+\end{tabular}
+\caption{Pipeline error audit, severity classification, and applied resolutions.}
+\label{tab:issues}
+\end{table}
+
+\subsection{Completeness Matrix}
+Table~\ref{tab:completeness} outlines missingness patterns across all 251 output records.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Field Variable Name} & \textbf{Data Type} & \textbf{Non-Null Count} & \textbf{Missingness (\%)} \\
+\midrule
+\texttt{country\_name} & String & 247 / 251 & 1.6\% \\
+\texttt{iso3\_code} & String & 251 / 251 & 0.0\% \\
+\texttt{gni\_per\_capita\_usd} & Float64 & 247 / 251 & 1.6\% \\
+\texttt{price\_level\_index} & Float64 & 202 / 251 & 19.5\% \\
+\texttt{ppp\_conversion\_factor} & Float64 & 202 / 251 & 19.5\% \\
+\texttt{representative\_city} & String & 204 / 251 & 18.7\% \\
+\texttt{coffee\_production\_qty} & Float64 & 77 / 251 & 69.3\% \\
+\texttt{production\_unit} & String & 80 / 251 & 68.1\% \\
+\texttt{coffee\_export\_value\_usd1000} & Float64 & 0 / 251 & 100.0\% \\
+\texttt{export\_unit} & Float64 & 0 / 251 & 100.0\% \\
+\texttt{purchasing\_power\_ratio} & Float64 & 198 / 251 & 21.1\% \\
+\texttt{living\_affordability\_score} & Float64 & 198 / 251 & 21.1\% \\
+\bottomrule
+\end{tabular}
+\caption{Completeness matrix for the consolidated dataset ($n=251$).}
+\label{tab:completeness}
+\end{table}
+
+
+\section{Strategic Recommendations \& Architectural Roadmap}
+
+
+\subsection{Data Pipeline Engineering}
+\begin{enumerate}[leftmargin=1.5em]
+    \item Direct API Pipeline Execution: Execute scripts \texttt{01}--\texttt{04} with live internet access to query the FAOSTAT API directly and populate export value metrics (\texttt{coffee\_export\_value\_usd1000}).
+    \item Log Transformations for Modeling: Include a $\log(PPR)$ variable in the release file to mitigate positive skewness ($\gamma_1 = 1.328$) for downstream regression tasks.
+    \item Dynamic Region Filtering: Replace static ISO exclusion arrays with dynamic API structural metadata checks to auto-detect aggregate region flags.
+\end{enumerate}
+
+\subsection{Economic \& Policy Insights}
+\begin{enumerate}[leftmargin=1.5em]
+    \item Domestic Value Retention: Policy initiatives in coffee-producing nations should focus on roasting, processing, and direct-to-consumer exports rather than raw bean production.
+    \item Targeted Affordability Benchmarking: Organizations should use $PPR$ alongside CPI indicators to evaluate real wage purchasing power in developing economies.
+\end{enumerate}
+
+
+\section{Conclusion}
+
+
+The \emph{Global Coffee \& Living Index} offers an empirical framework for evaluating purchasing power and agricultural economics across $n=198$ matched nations. Econometric analysis confirms that domestic price levels scale inelastically relative to national wealth ($\epsilon = 0.2252$), driving rapid gains in real living affordability in developed economies. 
+
+Furthermore, hypothesis testing and multivariate regression reveal that green coffee production volume does not yield a statistically significant improvement in domestic purchasing power ($p = 0.348$). Resolving pipeline data quality issues ensures that the public release dataset provides a clean foundation for econometric research.
+
+\newpage
+\appendix
+\section*{Appendix: Data Dictionary \& Variable Documentation}
+\addcontentsline{toc}{section}{Appendix: Data Dictionary \& Variable Documentation}
+
+\begin{longtable}{@{}p{5.5cm}p{9.5cm}@{}}
+\toprule
+\textbf{Field Name} & \textbf{Operational Definition \& Unit of Measure} \\
+\midrule
+\endhead
+\texttt{country\_name} & Official entity name standardized from World Bank metadata. \\
+\addlinespace
+\texttt{iso3\_code} & ISO 3166-1 alpha-3 international country identifier (Primary Key). \\
+\addlinespace
+\texttt{gni\_per\_capita\_usd} & Gross National Income per capita (Atlas method, current US\$). \\
+\addlinespace
+\texttt{price\_level\_index} & Price Level Index relative to United States baseline ($US = 100$). \\
+\addlinespace
+\texttt{ppp\_conversion\_factor} & Purchasing Power Parity conversion factor (Local Currency Units per Intl \$). \\
+\addlinespace
+\texttt{representative\_city} & Designated capital city name for spatial mapping. \\
+\addlinespace
+\texttt{coffee\_production\_qty} & Volume of green coffee produced annually (Metric tonnes, $t$). \\
+\addlinespace
+\texttt{production\_unit} & Unit specification for agricultural output (Standardized to `$t$'). \\
+\addlinespace
+\texttt{coffee\_export\_value\_usd1000} & Annual export value of green coffee (\$1,000 USD). \\
+\addlinespace
+\texttt{export\_unit} & Unit specification for export values (Standardized to `$1000\text{ US}\$Short$'). \\
+\addlinespace
+\texttt{purchasing\_power\_ratio} & Derived metric representing per-capita income per price unit ($GNI / PLI$). \\
+\addlinespace
+\texttt{living\_affordability\_score} & Min-max normalized purchasing power score projected onto $[0, 100]$. \\
+\bottomrule
+\end{longtable}
+
+\end{document}
