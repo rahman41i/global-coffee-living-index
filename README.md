@@ -54,3 +54,14 @@ Projects $PPR$ onto a normalized $[0, 100]$ scale for global cross-country bench
 * **Author:** Rahman Aliyev
 * **Data Vintage:** World Bank Indicators (2018–2023) & FAOSTAT Coffee Statistics (2020–2022)
 * **Publication Date:** August 2026
+
+---
+
+> 🚀 **Kaggle Release:** The complete dataset, processed metrics, and analytical notebooks are published on Kaggle for interactive exploration, visualization, and reproducible research.
+
+---
+
+##  Kaggle Resources
+
+*  **Kaggle Dataset:** [Global Coffee & Living Index Dataset]([https://www.kaggle.com/datasets](https://www.kaggle.com/datasets/rahman4li/global-coffee-and-living-index-2026))
+*  **Kaggle Notebook / EDA:** [View Interactive Analysis]([https://www.kaggle.com/code](https://www.kaggle.com/code/rahman4li/global-coffee-and-living-index))
